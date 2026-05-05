@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LuaScratch IDE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
+    <script type="module" src="./app.js"></script>
+  </head>
+  <body>
+    <div class="app-window">
+      <header class="titlebar">
+        <div class="titlebar-left">
+          <div class="title-logo">LS</div>
+          <nav class="menu-bar" aria-label="Main menu">
+            <span>File</span>
+            <span>Edit</span>
+            <span>Selection</span>
+            <span>View</span>
+            <span>Go</span>
+            <span>Run</span>
+            <span>Terminal</span>
+            <span>Help</span>
+          </nav>
+        </div>
+        <div class="command-center">
+          <span class="command-arrow">&lt;</span>
+          <span class="command-arrow">&gt;</span>
+          <div class="command-input">
+            <span class="command-project">LuaScratch</span>
+          </div>
+          <button id="analyzeButton" class="title-action">Update</button>
+        </div>
+        <div class="window-controls" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </header>
+
+      <div class="shell">
+        <aside class="activity-bar">
+          <button id="toggleExplorerButton" class="activity-icon active" type="button" title="Explorer">EX</button>
+          <button id="searchButton" class="activity-icon" type="button" title="Search">SR</button>
+          <button id="sourceControlButton" class="activity-icon" type="button" title="Source Control">SC</button>
+          <button id="runButton" class="activity-icon" type="button" title="Run">RN</button>
+          <button id="toggleInspectorButton" class="activity-icon" type="button" title="Extensions">XT</button>
+          <div class="activity-spacer"></div>
+          <button id="toggleThemeButton" class="activity-icon" type="button" title="Profile">PR</button>
+        </aside>
+
+        <aside id="explorerPane" class="explorer-pane">
+          <div class="explorer-header">
+            <span>Explorer</span>
+            <button id="explorerMoreButton" class="ghost-icon" type="button">...</button>
+          </div>
+
+          <section class="explorer-section">
+            <div class="section-title">Open Editors</div>
+            <div class="open-editor-card">
+              <span class="file-badge js">JS</span>
+              <span id="openEditorLabel">stage/Stage.moon</span>
+            </div>
+          </section>
+
+          <section class="explorer-section">
+            <div class="section-title">LuaScratch</div>
+            <div class="project-panel">
+              <div class="field-group compact-field">
+                <label for="projectName">Project</label>
+                <input id="projectName" type="text" />
+              </div>
+              <div class="action-stack">
+                <button id="saveSb3Button">Eksport .sb3</button>
+                <label class="file-button inline-file-button">
+                  Import .sb3 / .sb
+                  <input id="importInput" type="file" accept=".sb3,.sb,application/zip,application/json" />
+                </label>
+                <button id="saveInternalButton">Eksport .sb</button>
+                <button id="loadExampleButton">Przyklad</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="explorer-section">
+            <div class="section-title with-actions">
+              <span>Files</span>
+              <div class="section-actions">
+                <button id="addFileButton" class="ghost-icon" type="button">NF</button>
+                <button id="addSpriteButton" class="ghost-icon" type="button">+</button>
+                <button id="addBackdropButton" class="ghost-icon" type="button">BG</button>
+              </div>
+            </div>
+            <div id="fileTree" class="file-tree vscode-tree"></div>
+          </section>
+
+          <section class="explorer-section bottom-section">
+            <div class="section-title">Stats</div>
+            <div class="stats vscode-stats" id="projectStats"></div>
+          </section>
+        </aside>
+
+        <main class="workspace">
+          <section class="editor-panel">
+            <div class="editor-tabs">
+              <button class="editor-tab active" type="button">
+                <span class="file-badge js">JS</span>
+                <span id="activeTabTitle">Stage.moon</span>
+                <span id="closeTabButton" class="tab-close">x</span>
+              </button>
+            </div>
+
+            <div class="editor-header">
+              <div>
+                <h2 id="activeFilePath">stage/Stage.moon</h2>
+                <p id="activeFileMeta">Edytowalny plik MoonLua</p>
+              </div>
+              <div class="toolbar-group">
+                <button id="clearConsoleButton" class="subtle-button">Clear</button>
+                <span id="statusPill" class="status">Gotowe</span>
+              </div>
+            </div>
+
+            <div class="editor-shell">
+              <div id="lineNumbers" class="line-numbers"></div>
+              <div class="code-stack">
+                <pre id="highlightLayer" class="highlight-layer" aria-hidden="true"></pre>
+                <textarea
+                  id="codeEditor"
+                  spellcheck="false"
+                  autocapitalize="off"
+                  autocomplete="off"
+                  autocorrect="off"
+                ></textarea>
+              </div>
+            </div>
+          </section>
+
+          <section id="inspectorPanel" class="inspector-panel">
+            <div class="side-stack">
+              <div class="panel side-panel">
+                <div class="panel-header slim">
+                  <h2>Outline</h2>
+                </div>
+                <div id="previewPane" class="preview-pane"></div>
+              </div>
+
+              <div class="panel side-panel">
+                <div class="panel-header slim">
+                  <h2>Timeline</h2>
+                </div>
+                <pre id="consoleOutput" class="console-output"></pre>
+              </div>
+
+              <div class="panel side-panel reference-panel">
+                <div class="panel-header slim">
+                  <h2>MoonLua</h2>
+                </div>
+                <div class="reference-grid compact-reference">
+                  <article>
+                    <strong>Pliki</strong>
+                    <code>stage/Stage.moon</code>
+                    <code>sprites/Kot.moon</code>
+                    <code>drafts/untitled.moon</code>
+                  </article>
+                  <article>
+                    <strong>Zdarzenia</strong>
+                    <code>when flag_clicked do</code>
+                    <code>when key("space") do</code>
+                    <code>when broadcast("start") do</code>
+                  </article>
+                  <article>
+                    <strong>Ruch</strong>
+                    <code>move(10)</code>
+                    <code>goto(0, 0)</code>
+                    <code>switch_backdrop("Noc")</code>
+                  </article>
+                  <article>
+                    <strong>Dane</strong>
+                    <code>global score = 0</code>
+                    <code>set score = score + 1</code>
+                    <code>change score by 5</code>
+                  </article>
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+  </body>
+</html>
